@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2e9e3a">
+<title>EcoVision AI</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Segoe UI", Roboto, "Noto Sans Telugu", Arial, sans-serif; color:#14301c;
+         background:linear-gradient(180deg,#e9f6e1 0%,#f8fcf5 100%); min-height:100vh; }
+  .wrap { max-width:520px; margin:0 auto; padding:16px 16px 40px; }
+  .top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .logo { font-size:1.35rem; font-weight:800; color:#1f7a2c; }
+  .lang button { padding:8px 12px; border:2px solid #2e9e3a; background:#fff; color:#1f7a2c; font-size:.95rem; font-weight:700; cursor:pointer; }
+  .lang button:first-child { border-radius:10px 0 0 10px; } .lang button:last-child { border-radius:0 10px 10px 0; border-left:0; }
+  .lang button.on { background:#2e9e3a; color:#fff; }
+  .tag { text-align:center; font-size:1.25rem; font-weight:600; margin:22px 0 22px; line-height:1.4; }
+  .big { display:flex; align-items:center; justify-content:center; gap:12px; width:100%; min-height:76px; margin:0 0 14px; border:0; border-radius:20px;
+         font-size:1.3rem; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.12); }
+  .big .ic { font-size:2rem; }
+  .cam { background:#2e9e3a; color:#fff; } .gal { background:#fff; color:#1f7a2c; border:3px solid #2e9e3a; }
+  .big:active { transform:scale(.98); }
+  .flow { text-align:center; font-size:2rem; margin:26px 0 6px; letter-spacing:6px; } .flowt { text-align:center; color:#4b6b53; }
+  .photo { width:100%; max-height:300px; object-fit:contain; background:#fff; border-radius:18px; border:2px solid #cfe7c4; margin-bottom:14px; }
+  .loading { text-align:center; font-size:1.3rem; font-weight:700; padding:24px 0; }
+  .spin { width:46px; height:46px; margin:0 auto 12px; border:6px solid #cfe7c4; border-top-color:#2e9e3a; border-radius:50%; animation:s 1s linear infinite; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .card { background:#fff; border-radius:20px; padding:18px; box-shadow:0 4px 14px rgba(0,0,0,.1); margin-bottom:14px; }
+  .head { display:flex; align-items:center; gap:14px; }
+  .head .icon { font-size:3.4rem; line-height:1; } .head .name { font-size:1.7rem; font-weight:800; line-height:1.2; }
+  .lab { font-size:1rem; color:#4b6b53; font-weight:700; margin:16px 0 6px; }
+  .bar { height:18px; background:#e3eedd; border-radius:9px; overflow:hidden; } .fill { height:100%; background:#2e9e3a; border-radius:9px; }
+  .pct { font-size:1.25rem; font-weight:800; margin-top:6px; }
+  .bin { display:inline-block; color:#fff; font-weight:800; font-size:1.15rem; padding:10px 16px; border-radius:14px; }
+  .tips { list-style:none; margin:0; padding:0; } .tips li { display:flex; gap:12px; align-items:flex-start; font-size:1.2rem; line-height:1.45; padding:10px 0; border-bottom:1px solid #edf4e9; }
+  .tips li:last-child { border-bottom:0; } .tips .n { flex:none; width:34px; height:34px; border-radius:50%; background:#2e9e3a; color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .listen { background:#ffb300; color:#3b2a00; } .again { background:#e9f6e1; color:#1f7a2c; border:3px solid #2e9e3a; }
+  .err { background:#fde8e8; color:#8a1c1c; border-radius:16px; padding:16px; font-size:1.15rem; font-weight:600; margin-bottom:14px; text-align:center; }
+  .foot { text-align:center; color:#4b6b53; margin-top:22px; font-size:1rem; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">♻️ EcoVision AI</div>
+    <div class="lang"><button id="l-en" type="button">English</button><button id="l-te" type="button">తెలుగు</button></div>
+  </div>
+  <p class="tag" id="tag"></p>
+
+  <section id="home">
+    <button class="big cam" id="btnCam" type="button"><span class="ic">📷</span><span id="t-scan"></span></button>
+    <button class="big gal" id="btnGal" type="button"><span class="ic">🖼️</span><span id="t-gal"></span></button>
+    <div class="flow">📷 → 🤖 → ♻️</div>
+  </section>
+
+  <section id="res" hidden>
+    <img id="photo" class="photo" alt="">
+    <div id="loading" class="loading" hidden><div class="spin"></div><span id="t-check"></span></div>
+    <div id="err" class="err" hidden></div>
+    <div id="card" hidden></div>
+    <button class="big listen" id="btnSay" type="button" hidden><span class="ic">🔊</span><span id="t-say"></span></button>
+    <button class="big again" id="btnAgain" type="button"><span class="ic">📷</span><span id="t-again"></span></button>
+  </section>
+
+  <p class="foot" id="t-foot"></p>
+  <input type="file" id="file" accept="image/*" hidden>
+</div>
+
+<script>
+const T = {
+  en: { tag:'Scan any waste. Know what to do.', scan:'Scan with Camera', gal:'Choose from Gallery', check:'Checking...', say:'Listen', again:'Scan again',
+        how:'How sure?', todo:'What to do', put:'Put it in', v1:'Very sure', v2:'Fairly sure', v3:'Not sure. Take a clearer photo.',
+        err:'Something went wrong. Please try again.', foot:'Thank you for recycling responsibly!' },
+  te: { tag:'ఏ చెత్తనైనా స్కాన్ చేయండి. ఏం చేయాలో తెలుసుకోండి.', scan:'కెమెరాతో స్కాన్ చేయండి', gal:'గ్యాలరీ నుండి ఎంచుకోండి', check:'చూస్తున్నాం...', say:'వినండి', again:'మళ్ళీ స్కాన్ చేయండి',
+        how:'ఎంత ఖచ్చితం?', todo:'ఏం చేయాలి', put:'ఎక్కడ వేయాలి', v1:'చాలా ఖచ్చితం', v2:'దాదాపు ఖచ్చితం', v3:'ఖచ్చితంగా తెలియదు. స్పష్టమైన ఫోటో తీయండి.',
+        err:'ఏదో తప్పు జరిగింది. మళ్ళీ ప్రయత్నించండి.', foot:'బాధ్యతగా రీసైకిల్ చేసినందుకు ధన్యవాదాలు!' }
+};
+const $ = (id) => document.getElementById(id);
+let lang = 'en', last = null;
+try { lang = localStorage.getItem('lang') || ((navigator.language || '').startsWith('te') ? 'te' : 'en'); } catch (e) {}
+
+function labels() {
+  const t = T[lang];
+  document.documentElement.lang = lang;
+  $('tag').textContent = t.tag; $('t-scan').textContent = t.scan; $('t-gal').textContent = t.gal; $('t-check').textContent = t.check;
+  $('t-say').textContent = t.say; $('t-again').textContent = t.again; $('t-foot').textContent = t.foot;
+  $('l-en').classList.toggle('on', lang === 'en'); $('l-te').classList.toggle('on', lang === 'te');
+  if (last) showResult(last);
+}
+function setLang(l) { lang = l; try { localStorage.setItem('lang', l); } catch (e) {} labels(); }
+$('l-en').onclick = () => setLang('en'); $('l-te').onclick = () => setLang('te');
+
+function verdict(c) { const t = T[lang]; return c >= 80 ? t.v1 : (c >= 60 ? t.v2 : t.v3); }
+
+function showResult(r) {
+  last = r; const t = T[lang];
+  const tips = lang === 'te' ? r.tips_te : r.tips_en;
+  const name = lang === 'te' ? r.name_te : r.name_en;
+  const bin = lang === 'te' ? r.bin_te : r.bin_en;
+  $('card').innerHTML =
+    '<div class="card"><div class="head"><div class="icon">' + r.icon + '</div><div class="name">' + name + '</div></div>' +
+    '<div class="lab">' + t.how + '</div><div class="bar"><div class="fill" style="width:' + r.confidence + '%"></div></div>' +
+    '<div class="pct">' + r.confidence + '% - ' + verdict(r.confidence) + '</div>' +
+    '<div class="lab">' + t.put + '</div><span class="bin" style="background:' + r.bin_color + '">' + bin + '</span></div>' +
+    '<div class="card"><div class="lab" style="margin-top:0">' + t.todo + '</div><ul class="tips">' +
+    tips.map((x, i) => '<li><span class="n">' + (i + 1) + '</span><span>' + x + '</span></li>').join('') + '</ul></div>';
+  $('card').hidden = false; $('btnSay').hidden = false;
+}
+
+function say() {
+  if (!last || !('speechSynthesis' in window)) return;
+  const tips = lang === 'te' ? last.tips_te : last.tips_en;
+  const name = lang === 'te' ? last.name_te : last.name_en;
+  const u = new SpeechSynthesisUtterance([name, verdict(last.confidence)].concat(tips).join('. '));
+  u.lang = lang === 'te' ? 'te-IN' : 'en-IN';
+  window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+}
+$('btnSay').onclick = say;
+
+function pick(camera) {
+  const f = $('file');
+  if (camera) f.setAttribute('capture', 'environment'); else f.removeAttribute('capture');
+  f.value = ''; f.click();
+}
+$('btnCam').onclick = () => pick(true); $('btnGal').onclick = () => pick(false); $('btnAgain').onclick = () => pick(true);
+
+async function shrink(file) {
+  try {
+    const bmp = await createImageBitmap(file);
+    const s = Math.min(1, 800 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise((res) => c.toBlob((b) => res(b || file), 'image/jpeg', 0.85));
+  } catch (e) { return file; }
+}
+
+$('file').addEventListener('change', async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  last = null; window.speechSynthesis && window.speechSynthesis.cancel();
+  $('home').hidden = true; $('res').hidden = false; $('photo').src = URL.createObjectURL(file);
+  $('card').hidden = true; $('btnSay').hidden = true; $('err').hidden = true; $('loading').hidden = false;
+  try {
+    const fd = new FormData(); fd.append('image', await shrink(file), 'photo.jpg');
+    const resp = await fetch('/predict', { method: 'POST', body: fd });
+    const data = await resp.json();
+    $('loading').hidden = true;
+    if (!resp.ok || data.error) throw new Error(data.error || 'failed');
+    showResult(data);
+  } catch (err) {
+    $('loading').hidden = true; $('err').textContent = T[lang].err; $('err').hidden = false;
+  }
+});
+labels();
+</script>
+</body>
+</html>
