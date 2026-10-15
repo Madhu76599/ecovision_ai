@@ -4,7 +4,9 @@ from flask import Flask, jsonify, render_template, request
 
 from predict import get_model, predict_bytes
 
-app = Flask(__name__)
+_here = os.path.dirname(os.path.abspath(__file__))
+_tpl = "templates" if os.path.exists(os.path.join(_here, "templates", "index.html")) else "."
+app = Flask(__name__, template_folder=_tpl)
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024  # 8 MB
 
 # Load the model once at startup so the first visitor is not slow

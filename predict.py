@@ -14,8 +14,16 @@ except ImportError:
         from tensorflow.lite.python.interpreter import Interpreter
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "model", "model.tflite")
-CLASSES_PATH = os.path.join(BASE_DIR, "model", "class_names.json")
+
+
+def _locate(name):
+    """Find a model file inside model/ or directly in the project folder."""
+    for folder in (os.path.join(BASE_DIR, "model"), BASE_DIR):
+        path = os.path.join(folder, name)
+        if os.path.exists(path):
+            return path
+    return None
+
 IMG_SIZE = 224
 
 BINS = {
@@ -62,13 +70,15 @@ def get_model():
     """Load the TFLite model and class names once, then reuse them."""
     global _interp, _class_names, _in, _out
     if _interp is None:
-        if not os.path.exists(MODEL_PATH):
-            raise FileNotFoundError(MODEL_PATH)
-        it = Interpreter(model_path=MODEL_PATH)
+        model_path = _locate("model.tflite")
+        classes_path = _locate("class_names.json")
+        if model_path is None or classes_path is None:
+            raise FileNotFoundError("model.tflite or class_names.json not found")
+        it = Interpreter(model_path=model_path)
         it.allocate_tensors()
         _in = it.get_input_details()[0]
         _out = it.get_output_details()[0]
-        with open(CLASSES_PATH) as f:
+        with open(classes_path) as f:
             _class_names = json.load(f)
         _interp = it
     return _interp, _class_names
